@@ -1,43 +1,35 @@
-// import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
-// import { RedirectToSignIn, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
-// import {
-//   createBrowserRouter,
-//   createRoutesFromElements,
-//   Route,
-//   RouterProvider
-// } from "react-router-dom";
-// import Home from './pages/Home';
-// import Dashboard from './pages/Dashboard';
+import React from 'react'
+import './App.css'
+import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
 
-// const router = createBrowserRouter(
-//   createRoutesFromElements(
-//     <>
-//       <Route index element={<Home />}/>
-//       <Route path="/dashboard" element={
-//         <>
-//           <SignedIn>
-//             <Dashboard />
-//           </SignedIn>
-          
-//           <SignedOut>
-//             <RedirectToSignIn />
-//           </SignedOut>
-//         </>}
-//       />
-//     </>
-//   )
-// )
+// Import the layouts
+import RootLayout from './layouts/root-layout'
+import DashboardLayout from './layouts/dashboard-layout'
 
-// function App() {
+// Import the components
+import IndexPage from './pages/Index'
+import SignInPage from './pages/SignIn'
+import SignUpPage from './pages/SignUp'
+import DashboardPage from './pages/Dashboard'
 
-//   return (
-//     <>
-//       <RouterProvider router={router} />
-//     </>
-//   )
-// }
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path='/' element={<RootLayout />}>
+      <Route index element={<IndexPage />} />
+      <Route path='/sign-in/*' element={<SignInPage />} />
+      <Route path='/sign-up/*' element={<SignUpPage />} />
+      <Route path='/dashboard' element={<DashboardLayout />}>
+        <Route index element={<DashboardPage />}/>
+      </Route>
+    </Route>
+  )
+)
 
-// export default App
+function App() {
+
+    return (
+        <RouterProvider router={router} />
+    )
+}
+
+export default App
