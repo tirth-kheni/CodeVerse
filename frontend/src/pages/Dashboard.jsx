@@ -2,27 +2,28 @@ import React from "react";
 import { FiBookmark, FiMessageCircle, FiFilter, FiThumbsUp } from "react-icons/fi";
 import { FaSort, FaHome, FaQuestionCircle, FaTags, FaUsers, FaPlus, FaEye } from "react-icons/fa";
 import Header from "../components/Header";
+import { Link } from "react-router-dom";
 
 const DashboardPage = () => {
   const blogs = [
     {
       title: "How to optimize algorithms",
       author: "JohnDoe",
-      date: "Jun 6, 2025",
+      date: "May 25, 2024",
       problemLink: "https://example.com/problem",
       comments: 12,
-      upvotes: 22,
-      views: 110,
+      upvotes: 42,
+      views: 120,
       tags: ["Optimization", "Algorithms"],
     },
     {
       title: "Tips for competitive programming",
       author: "JaneDoe",
-      date: "Jun 5, 2025",
+      date: "May 23, 2024",
       problemLink: "https://example.com/problem2",
-      comments: 10,
-      upvotes: 25,
-      views: 48,
+      comments: 8,
+      upvotes: 35,
+      views: 98,
       tags: ["Tips", "Competitive Programming"],
     },
     // Add more blog posts here
@@ -37,18 +38,18 @@ const DashboardPage = () => {
         {/* Sidebar */}
         <div className="w-full lg:w-1/6 bg-background p-4 rounded-lg shadow-lg mb-4 lg:mb-0">
           <nav className="flex flex-col space-y-4">
-            <a href="#" className="flex items-center text-secondary_text hover:text-primary">
+            <Link to="/" className="flex items-center text-secondary_text hover:text-primary">
               <FaHome className="mr-2" /> Home
-            </a>
-            <a href="#" className="flex items-center text-secondary_text hover:text-primary">
+            </Link>
+            <Link to="#" className="flex items-center text-secondary_text hover:text-primary">
               <FaQuestionCircle className="mr-2" /> Questions
-            </a>
-            <a href="#" className="flex items-center text-secondary_text hover:text-primary">
+            </Link>
+            <Link to="#" className="flex items-center text-secondary_text hover:text-primary">
               <FaTags className="mr-2" /> Tags
-            </a>
-            <a href="#" className="flex items-center text-secondary_text hover:text-primary">
+            </Link>
+            <Link to="#" className="flex items-center text-secondary_text hover:text-primary">
               <FaUsers className="mr-2" /> Communities
-            </a>
+            </Link>
           </nav>
         </div>
 
