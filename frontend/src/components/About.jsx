@@ -80,7 +80,7 @@ const About = () => {
           <p className="mt-6 text-xs lg:text-sm leading-none text-gray-900 dark:text-gray-50">
             &copy; {new Date().getFullYear()} designed by{" "}
             <a href="https://github.com/kashyap0O7/zcoder" rel="nofollow">
-              Kashyap
+              Kashyap Pansuriya
             </a>
           </p>
         </div>
