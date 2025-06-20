@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import {
   FiBookmark,
   FiMessageCircle,
-  FiFilter,
-  FiThumbsUp,
+  FiArrowUp,
+  FiArrowDown,
 } from "react-icons/fi";
 import {
   FaHome,
@@ -12,6 +12,7 @@ import {
   FaUsers,
   FaPlus,
   FaEye,
+  FaPaperPlane,
 } from "react-icons/fa";
 import Header from "../components/Header";
 import { Link } from "react-router-dom";
@@ -20,31 +21,35 @@ import { useAuth } from "@clerk/clerk-react";
 
 const DashboardPage = () => {
   const [sortMethod, setSortMethod] = useState("recent");
-  const [tagFilter, setTagFilter] = useState("");
+  const [tags, setTags] = useState([]);
+  const [newTag, setNewTag] = useState("");
   const [platformFilter, setPlatformFilter] = useState("");
-  const { blogPosts: blogs, loading } = useFetchBlogPosts(sortMethod);
+  const [page, setPage] = useState(1);
+  const { blogPosts: blogs, loading, totalPages } = useFetchBlogPosts(sortMethod, page, 5, tags, platformFilter);
   const { userId } = useAuth();
 
-  const handleSortChange = (e) => {
-    setSortMethod(e.target.value);
+  const handleAddTag = (e) => {
+    if (e.key === "Enter" || e.type === "click") {
+      e.preventDefault();
+      if (
+        newTag.trim() &&
+        !tags
+          .map((tag) => tag.toLowerCase())
+          .includes(newTag.trim().toLowerCase())
+      ) {
+        setTags([...tags, newTag.trim()]);
+        setNewTag("");
+      }
+    }
   };
 
-  const handleTagFilterChange = (e) => {
-    setTagFilter(e.target.value);
-  };
-
-  const handlePlatformFilterChange = (e) => {
-    setPlatformFilter(e.target.value);
+  const handleTagRemove = (index) => {
+    setTags(tags.filter((_, i) => i !== index));
   };
 
   if (loading) {
     return <div>Loading...</div>;
   }
-
-  const filteredBlogs = blogs.filter(blog => {
-    return (tagFilter === "" || blog.tags.includes(tagFilter)) && 
-           (platformFilter === "" || blog.platform === platformFilter);
-  });
 
   return (
     <>
@@ -87,35 +92,41 @@ const DashboardPage = () => {
           <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
             <h1 className="text-3xl font-bold mb-4 lg:mb-0">All Questions</h1>
             <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
-              <select 
-                className="select select-bordered w-full lg:w-auto" 
-                value={sortMethod} 
-                onChange={handleSortChange}
+              <select
+                className="select select-bordered w-full lg:w-auto"
+                value={sortMethod}
+                onChange={(e) => setSortMethod(e.target.value)}
               >
                 <option value="recent">Recent</option>
                 <option value="oldest">Oldest</option>
                 <option value="popularity">Popularity</option>
+                <option value="views">Most Viewed</option>
               </select>
-              <select 
-                className="select select-bordered w-full lg:w-auto" 
-                value={tagFilter} 
-                onChange={handleTagFilterChange}
-              >
-                <option value="">All Tags</option>
-                {/* Replace with your actual tags */}
-                <option value="GFG">Tag 1</option>
-                <option value="tag2">Tag 2</option>
-              </select>
-              <select 
-                className="select select-bordered w-full lg:w-auto" 
-                value={platformFilter} 
-                onChange={handlePlatformFilterChange}
-              >
-                <option value="">All Platforms</option>
-                {/* Replace with your actual platforms */}
-                <option value="platform1">Platform 1</option>
-                <option value="platform2">Platform 2</option>
-              </select>
+              <div className="flex items-center">
+                <input
+                  id="tags"
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  className="input input-bordered w-full lg:w-auto p-2"
+                  placeholder="Add tag"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddTag}
+                  className="ml-2 p-2 rounded-lg bg-primary text-primary_text hover:bg-border hover:text-primary"
+                >
+                  <FaPaperPlane />
+                </button>
+              </div>
+              <input
+                type="text"
+                className="input input-bordered w-full lg:w-auto"
+                placeholder="All Platforms"
+                value={platformFilter}
+                onChange={(e) => setPlatformFilter(e.target.value)}
+              />
               {userId && (
                 <Link to="add-post">
                   <button className="bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg flex items-center">
@@ -125,10 +136,25 @@ const DashboardPage = () => {
               )}
             </div>
           </header>
-
+          <div className="flex flex-wrap mt-4 lg:mt-0">
+            {tags.map((tag, index) => (
+              <span
+                key={index}
+                className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 mb-2 text-sm"
+              >
+                {tag}
+                <button
+                  onClick={() => handleTagRemove(index)}
+                  className="ml-1 text-primary hover:text-tertiary"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
           <section>
             <div className="space-y-8">
-              {filteredBlogs.map((blog) => (
+              {blogs.map((blog) => (
                 <div
                   key={blog._id}
                   className="bg-background p-4 rounded-lg shadow drop-shadow-xl border border-secondary/80"
@@ -144,7 +170,7 @@ const DashboardPage = () => {
                   >
                     Problem Link: {blog.problemLink}
                   </a>
-                  <div className="mb-2 whitespace-nowrap overflow-scroll ">
+                  <div className="mb-2 whitespace-nowrap overflow-scroll">
                     {blog.tags.map((tag, index) => (
                       <span
                         key={index}
@@ -167,14 +193,17 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex items-center">
                       <span className="flex items-center mr-4">
-                        <FiThumbsUp className="mr-2" /> {blog.upvotes.length}
+                        <FiArrowUp className="mr-2" /> {blog.upvotes.length}
+                      </span>
+                      <span className="flex items-center mr-4">
+                        <FiArrowDown className="mr-2" /> {blog.downvotes.length}
                       </span>
                       <span className="flex items-center mr-4">
                         <FiMessageCircle className="mr-2" />
                         {blog.commentsCount}
                       </span>
                       <span className="flex items-center mr-4">
-                        <FaEye className="mr-2" /> {blog.views}
+                        <FaEye className="mr-2" /> {blog.views.length}
                       </span>
                     </div>
                   </div>
@@ -182,6 +211,24 @@ const DashboardPage = () => {
               ))}
             </div>
           </section>
+          {/* Pagination Controls */}
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              className="px-4 py-2 mx-1 bg-primary text-primary_text rounded-lg disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2 mx-1">{`Page ${page} of ${totalPages}`}</span>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              className="px-4 py-2 mx-1 bg-primary text-primary_text rounded-lg disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </>

@@ -5,8 +5,8 @@ import User from "../models/user.model.js";
 // Create a new blog post
 export const createBlogPost = async (req, res) => {
   try {
-    const { title, author, problemLink, tags, content, visibility } = req.body;
-    const newBlogPost = new BlogPost({ title, author, problemLink, tags, content, visibility });
+    const { title, author, problemLink, tags, content, visibility , platform} = req.body;
+    const newBlogPost = new BlogPost({ title, author, problemLink, tags, content, visibility , platform});
 
     if (!newBlogPost) {
       return res.status(404).json({ error: "Invalid blog data, can't create blog" });
@@ -30,7 +30,7 @@ export const createBlogPost = async (req, res) => {
 
 // Get all blog posts
 export const getAllBlogPosts = async (req, res) => {
-  const { sort } = req.query;
+  const { sort, page = 1, limit = 10, tags = '', platform = '' } = req.query;
   let sortOption;
 
   switch (sort) {
@@ -43,16 +43,39 @@ export const getAllBlogPosts = async (req, res) => {
     case "popularity":
       sortOption = { upvotes: -1 };
       break;
+    case "views":
+      sortOption = { views: -1 };
+      break;
     default:
       sortOption = { date: -1 };
   }
+
+  const tagArray = tags.split(',').filter(tag => tag); // Convert tags query to an array
+  const skip = (page - 1) * limit; // Calculate the number of documents to skip
+
+  const filter = {
+    visibility: true,
+    ...(tagArray.length > 0 && { tags: { $all: tagArray } }), // Filter by tags if provided
+    ...(platform && { platform: new RegExp(platform, 'i') }) // Filter by platform if provided
+  };
+
   try {
-    const blogPosts = await BlogPost.find({visibility:{$eq:true}}).populate("author").sort(sortOption);
-    res.status(200).json(blogPosts);
+    const blogPosts = await BlogPost.find(filter)
+      .populate("author")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const totalPosts = await BlogPost.countDocuments(filter);
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    res.status(200).json({ blogPosts, totalPages });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 // Get a blog post by ID
 export const getBlogPostById = async (req, res) => {
@@ -77,7 +100,7 @@ export const getBlogPostById = async (req, res) => {
 // Update a blog post
 export const updateBlogPost = async (req, res) => {
   try {
-    const { title, problemLink, tags, content, visibility } = req.body;
+    const { title, problemLink, tags, content, visibility ,platform} = req.body;
     const blogPost = await BlogPost.findById(req.params.id);
     if (!blogPost) {
       return res.status(404).json({ message: "Blog post not found" });
@@ -88,6 +111,7 @@ export const updateBlogPost = async (req, res) => {
     blogPost.tags = tags;
     blogPost.content = content;
     blogPost.visibility = visibility;
+    blogPost.platform = platform;
 
     const updatedBlogPost = await blogPost.save();
     res.status(200).json(updatedBlogPost);
@@ -189,6 +213,27 @@ export const downvoteBlogPost = async (req, res) => {
     }
     if (blogPost.upvotes.includes(userId)) {
       blogPost.upvotes = blogPost.upvotes.filter(id => id.toString() !== userId);
+    }
+
+    const updatedBlogPost = await blogPost.save();
+    res.status(200).json(updatedBlogPost);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Incrementing views
+export const incrementViews = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const blogPost = await BlogPost.findById(req.params.id);
+    if (!blogPost) {
+      return res.status(404).json({ message: "Blog post not found" });
+    }
+
+    // Only add to views if the user hasn't viewed it before
+    if (!blogPost.views.includes(userId)) {
+      blogPost.views.push(userId);
     }
 
     const updatedBlogPost = await blogPost.save();

@@ -7,6 +7,15 @@ import useFetchBlogPostbyId from "../hooks/useFetchBlogPostbyId.js";
 import useUpdateBlogPost from "../hooks/useUpdateBlogPost.js";
 import useDeleteBlogPost from "../hooks/useDeleteBlogPost.js";
 
+const getDomainFromUrl = (url) => {
+  try {
+    const { hostname } = new URL(url);
+    return hostname.replace('www.', '');
+  } catch (error) {
+    return '';
+  }
+};
+
 const EditPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -46,6 +55,7 @@ const EditPost = () => {
       tags,
       problemLink,
       visibility: isPublic,
+      platform: getDomainFromUrl(problemLink),
     };
 
     await updateBlogPost(id, updatedPost);
@@ -140,7 +150,7 @@ const EditPost = () => {
                       {tag}
                       <button
                         type="button"
-                        className="ml-2 text-primary"
+                        className="ml-2 text-primary hover:text-tertiary"
                         onClick={() => handleTagRemove(index)}
                       >
                         &times;
