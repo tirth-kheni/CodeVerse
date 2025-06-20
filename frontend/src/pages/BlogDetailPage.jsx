@@ -39,7 +39,7 @@ const BlogDetailPage = () => {
         setTimeout(() => navigate('/dashboard'), 2000); // Redirect after 2 seconds
       }
       setComments(blogPost.comments);
-      setUpvoteCount(blogPost.upvotes.length);
+      setUpvoteCount(blogPost.upvotes?.length??0);
       setDownvoteCount(blogPost.downvotes.length);
     }
   }, [postLoading, blogPost]);

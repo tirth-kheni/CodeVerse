@@ -19,7 +19,7 @@ import useFetchBlogPosts from "../hooks/useFetchBlogPosts";
 import { useAuth } from "@clerk/clerk-react";
 
 const DashboardPage = () => {
-  const [sortMethod, setSortMethod] = useState("oldest");
+  const [sortMethod, setSortMethod] = useState("recent");
   const [tagFilter, setTagFilter] = useState("");
   const [platformFilter, setPlatformFilter] = useState("");
   const { blogPosts: blogs, loading } = useFetchBlogPosts(sortMethod);
@@ -167,7 +167,7 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex items-center">
                       <span className="flex items-center mr-4">
-                        <FiThumbsUp className="mr-2" /> {blog.upvotes.length}
+                        <FiThumbsUp className="mr-2" /> {blog.upvotes?.length??0}
                       </span>
                       <span className="flex items-center mr-4">
                         <FiMessageCircle className="mr-2" />
