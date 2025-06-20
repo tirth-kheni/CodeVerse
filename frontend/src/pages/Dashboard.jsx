@@ -140,11 +140,11 @@ const DashboardPage = () => {
                   </Link>
                   <a
                     href={blog.problemLink}
-                    className="text-primary mb-2 block hover:underline"
+                    className="text-primary mb-2 block hover:underline truncate"
                   >
                     Problem Link: {blog.problemLink}
                   </a>
-                  <div className="mb-2">
+                  <div className="mb-2 whitespace-nowrap overflow-scroll ">
                     {blog.tags.map((tag, index) => (
                       <span
                         key={index}
@@ -167,7 +167,7 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex items-center">
                       <span className="flex items-center mr-4">
-                        <FiThumbsUp className="mr-2" /> {blog.upvotes?.length??0}
+                        <FiThumbsUp className="mr-2" /> {blog.upvotes.length}
                       </span>
                       <span className="flex items-center mr-4">
                         <FiMessageCircle className="mr-2" />
