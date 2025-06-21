@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { FiMessageCircle, FiBookmark } from "react-icons/fi";
 import { IoArrowBack } from "react-icons/io5";
 import { FaEdit, FaEye } from "react-icons/fa";
 import { MdThumbUp, MdThumbDown } from "react-icons/md";
 import Header from "../components/Header";
+import Spinner from "../components/spinner";
 import useFetchBlogPostbyId from "../hooks/useFetchBlogPostbyId";
 import useAddCommentToBlogPost from "../hooks/useAddCommentToBlogPost";
 import useUpvoteBlogPost from "../hooks/useUpvoteBlogPost";
@@ -17,10 +18,9 @@ import useIncrementBlogPostView from "../hooks/useIncrementBlogPostView";
 import useFavoriteBlogPost from "../hooks/useFavoriteBlogPost";
 import useUnfavoriteBlogPost from "../hooks/useUnfavoriteBlogPost";
 import formatDate from "../utils/formatDate";
-import Spinner from "../components/spinner";
-
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
+import toast from "react-hot-toast";
 
 const BlogDetailPage = () => {
   const { id } = useParams();
@@ -40,7 +40,7 @@ const BlogDetailPage = () => {
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const { userId, isLoaded: authLoaded } = useAuth();
-  const { user, loading: userLoading } = useFetchUserById(userId);
+  const { user, loading: userLoading } = useFetchUserById(userId , authLoaded) ;
   const [comments, setComments] = useState([]);
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [downvoteCount, setDownvoteCount] = useState(0);
@@ -50,11 +50,12 @@ const BlogDetailPage = () => {
   const [hasDownvoted, setHasDownvoted] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showReplies, setShowReplies] = useState({});
+  const replyTextareaRef = useRef(null);
 
   useEffect(() => {
     if (!postLoading && blogPost) {
       if (!blogPost.visibility && blogPost.author.clerkId !== userId) {
-        setTimeout(() => navigate('/dashboard'), 2000); // Redirect after 2 seconds
+        setTimeout(() => navigate("/dashboard"), 2000); // Redirect after 2 seconds
       }
       setComments(blogPost.comments);
       setViewCount(blogPost.views.length);
@@ -74,7 +75,7 @@ const BlogDetailPage = () => {
       }
     }
   }, [userLoading, user, blogPost, postLoading]);
-
+// console.log(authLoaded , userId , userLoading , user, postLoading , blogPost)
   if (postLoading || userLoading) {
     return <Spinner />;
   }
@@ -100,6 +101,9 @@ const BlogDetailPage = () => {
       }
       setCommentContent("");
     }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
+    }
   };
 
   const handleReplySubmit = async (e, parentId) => {
@@ -119,6 +123,9 @@ const BlogDetailPage = () => {
         setReplyContent("");
       }
     }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
+    }
   };
 
   const handleUpvote = async () => {
@@ -130,6 +137,9 @@ const BlogDetailPage = () => {
         setDownvoteCount(downvoteCount - 1);
         setHasDownvoted(false);
       }
+    }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
     }
   };
 
@@ -143,12 +153,18 @@ const BlogDetailPage = () => {
         setHasUpvoted(false);
       }
     }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
+    }
   };
 
   const handleFavorite = async () => {
     if (user && user._id && !isFavorite) {
       await favorite(user._id);
       setIsFavorite(true);
+    }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
     }
   };
 
@@ -157,11 +173,28 @@ const BlogDetailPage = () => {
       await unfavorite(user._id);
       setIsFavorite(false);
     }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
+    }
   };
 
   const handleReplyClick = (comment) => {
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
+    }
     setReplyingTo(comment._id);
     setReplyContent(`@${comment.author.name} `);
+    setTimeout(() => {
+      replyTextareaRef.current.selectionStart = replyTextareaRef.current.value.length;
+      replyTextareaRef.current.selectionEnd = replyTextareaRef.current.value.length;
+      replyTextareaRef.current.focus();
+    }, 0);
+  };
+
+  const adjustTextareaHeight = (event) => {
+    const textarea = event.target;
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
   };
 
   const handleCommentUpvote = async (commentId, parentId, hasUpvoted) => {
@@ -193,6 +226,9 @@ const BlogDetailPage = () => {
           return comment;
         })
       );
+    }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
     }
   };
 
@@ -226,6 +262,9 @@ const BlogDetailPage = () => {
         })
       );
     }
+    if(!user){
+      toast.error('Please Sign In to Perform Action')
+    }
   };
 
   const toggleShowReplies = (commentId) => {
@@ -235,12 +274,11 @@ const BlogDetailPage = () => {
     }));
   };
 
-  
   const renderContentWithHighlighting = (content) => {
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     const codeBlockPattern = /^```(\w+)?\s*$/;
     let inCodeBlock = false;
-    let language = '';
+    let language = "";
     let currentCodeBlock = [];
     const result = [];
 
@@ -250,14 +288,14 @@ const BlogDetailPage = () => {
         if (inCodeBlock) {
           result.push(
             <SyntaxHighlighter language={language} style={darcula} key={`codeblock-${index}`}>
-              {currentCodeBlock.join('\n')}
+              {currentCodeBlock.join("\n")}
             </SyntaxHighlighter>
           );
           currentCodeBlock = [];
           inCodeBlock = false;
         } else {
           inCodeBlock = true;
-          language = match[1] || 'text';
+          language = match[1] || "text";
         }
       } else if (inCodeBlock) {
         currentCodeBlock.push(line);
@@ -269,7 +307,7 @@ const BlogDetailPage = () => {
     if (currentCodeBlock.length > 0) {
       result.push(
         <SyntaxHighlighter language={language} style={darcula} key={`codeblock-${lines.length}`}>
-          {currentCodeBlock.join('\n')}
+          {currentCodeBlock.join("\n")}
         </SyntaxHighlighter>
       );
     }
@@ -278,81 +316,75 @@ const BlogDetailPage = () => {
   };
 
   const renderComments = (comments, parentId = id) => {
-    return comments.filter(comment => comment.parentId === parentId).map(comment => (
-      <div key={comment._id} className="p-4 mb-4 bg-primary/5 drop-shadow-xl rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <Link to={`/${comment.author.clerkId}`} className="text-primary hover:underline">
-              {comment.author.clerkId === userId ? "You" : comment.author.name}
-            </Link>
-            <p className="text-secondary_text text-sm">{formatDate(comment.date)}</p>
+    return comments
+      .filter((comment) => comment.parentId === parentId)
+      .map((comment) => (
+        <div key={comment._id} className="p-4 mb-4 bg-primary/5 drop-shadow-xl rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <Link to={`/${comment.author.clerkId}`} className="text-primary hover:underline">
+                {comment.author.clerkId === userId ? "You" : comment.author.name}
+              </Link>
+              <p className="text-secondary_text text-sm">{formatDate(comment.date)}</p>
+            </div>
+          </div>
+          <div className="text-primary_text mt-2">{renderContentWithHighlighting(comment.content)}</div>
+          <div className="flex items-center mt-2 text-secondary_text">
+            <span className="flex items-center mr-4">
+              <MdThumbUp
+                className={`mr-2 cursor-pointer ${comment.upvotes.includes(user?._id) ? "text-primary" : ""}`}
+                onClick={() => handleCommentUpvote(comment._id, comment.parentId, comment.upvotes.includes(user?._id))}
+              />
+              {comment.upvotes.length}
+            </span>
+            <span className="flex items-center mr-4">
+              <MdThumbDown
+                className={`mr-2 cursor-pointer ${comment.downvotes.includes(user?._id) ? "text-primary" : ""}`}
+                onClick={() => handleCommentDownvote(comment._id, comment.parentId, comment.downvotes.includes(user?._id))}
+              />
+              {comment.downvotes.length}
+            </span>
+            <button onClick={() => handleReplyClick(comment)} className="text-primary underline">
+              Reply
+            </button>
+          </div>
+          <div className="ml-8">
+            {!showReplies[comment._id] && comment.replies.length > 0 && (
+              <button onClick={() => toggleShowReplies(comment._id)} className="text-primary underline mt-2">
+                Show all replies ({comment.replies.length})
+              </button>
+            )}
+            {showReplies[comment._id] && comment.replies.length > 0 && (
+              <button onClick={() => toggleShowReplies(comment._id)} className="text-primary underline mt-2">
+                Hide replies
+              </button>
+            )}
+            {replyingTo === comment._id && user && (
+              <form
+                onSubmit={(e) => handleReplySubmit(e, comment.parentId === id ? comment._id : comment.parentId)}
+                className="mt-4"
+              >
+                <textarea
+                  ref={replyTextareaRef}
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  className="w-full p-2 border rounded-lg resize-none overflow-hidden"
+                  rows="2"
+                  placeholder="Add a reply..."
+                  required
+                  onInput={adjustTextareaHeight}
+                />
+                <button type="submit" className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg">
+                  Add Reply
+                </button>
+              </form>
+            )}
+            
+            {showReplies[comment._id] && renderComments(comment.replies, comment._id)}
           </div>
         </div>
-        <p className="text-primary_text mt-2">{renderContentWithHighlighting(comment.content)}</p>
-        <div className="flex items-center mt-2 text-secondary_text">
-          <span className="flex items-center mr-4">
-            <MdThumbUp
-              className={`mr-2 cursor-pointer ${comment.upvotes.includes(user?._id) ? "text-primary" : ""}`}
-              onClick={() => handleCommentUpvote(comment._id, comment.parentId, comment.upvotes.includes(user?._id))}
-            />
-            {comment.upvotes.length}
-          </span>
-          <span className="flex items-center mr-4">
-            <MdThumbDown
-              className={`mr-2 cursor-pointer ${comment.downvotes.includes(user?._id) ? "text-primary" : ""}`}
-              onClick={() => handleCommentDownvote(comment._id, comment.parentId, comment.downvotes.includes(user?._id))}
-            />
-            {comment.downvotes.length}
-          </span>
-          <button
-            onClick={() => handleReplyClick(comment)}
-            className="text-primary underline"
-          >
-            Reply
-          </button>
-        </div>
-        <div className="ml-8">
-          {!showReplies[comment._id] && comment.replies.length > 0 && (
-            <button
-              onClick={() => toggleShowReplies(comment._id)}
-              className="text-primary underline mt-2"
-            >
-              Show all replies ({comment.replies.length})
-            </button>
-          )}
-          {showReplies[comment._id] && comment.replies.length > 0 && (
-            <button
-              onClick={() => toggleShowReplies(comment._id)}
-              className="text-primary underline mt-2"
-            >
-              Hide replies
-            </button>
-          )}
-          {showReplies[comment._id] && renderComments(comment.replies, comment._id)}
-          {replyingTo === comment._id && (
-            <form onSubmit={(e) => handleReplySubmit(e, comment.parentId === id ? comment._id : comment.parentId)} className="mt-4">
-              <textarea
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                className="w-full p-2 border rounded-lg"
-                rows="2"
-                placeholder="Add a reply..."
-                required
-              />
-              <button
-                type="submit"
-                className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg"
-              >
-                Add Reply
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    ));
+      ));
   };
-
-
 
   return (
     <>
@@ -392,10 +424,7 @@ const BlogDetailPage = () => {
           </p>
           <div className="mb-4">
             {blogPost.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 text-sm"
-              >
+              <span key={index} className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 text-sm">
                 #{tag}
               </span>
             ))}
@@ -416,7 +445,7 @@ const BlogDetailPage = () => {
               {downvoteCount}
             </span>
             <span className="flex items-center mr-4">
-              <FiMessageCircle className="mr-2" /> {comments.length + comments.reduce((sum,array) => sum + array.replies?.length , 0)}
+              <FiMessageCircle className="mr-2" /> {comments.length + comments.reduce((sum, array) => sum + array.replies?.length, 0)}
             </span>
             <span className="flex items-center mr-4">
               <FaEye className="mr-2" /> {viewCount}
@@ -430,7 +459,7 @@ const BlogDetailPage = () => {
             </span>
           </div>
           <div className="mb-8">
-          {renderContentWithHighlighting(blogPost.content)}
+            {renderContentWithHighlighting(blogPost.content)}
           </div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold">Comments</h2>
@@ -451,22 +480,18 @@ const BlogDetailPage = () => {
               <textarea
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg resize-none overflow-hidden"
                 rows="4"
                 placeholder="Add a comment..."
                 required
+                onInput={adjustTextareaHeight}
               />
-              <button
-                type="submit"
-                className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg"
-              >
+              <button type="submit" className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg">
                 Add Comment
               </button>
             </form>
           )}
-          <div className="space-y-4">
-            {renderComments(comments)}
-          </div>
+          <div className="space-y-4">{renderComments(comments)}</div>
         </div>
       </div>
     </>

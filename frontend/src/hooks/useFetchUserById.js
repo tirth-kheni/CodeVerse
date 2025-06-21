@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
-const useFetchUserById = (clerkId) => {
+const useFetchUserById = (clerkId, isLoaded) => {
+
+  // if (isLoaded && !clerkId) return {user:null, loading:false};
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,9 +25,10 @@ const useFetchUserById = (clerkId) => {
         setLoading(false);
       }
     };
-
-    fetchUser();
-  }, [clerkId]);
+    if (isLoaded) {
+      fetchUser();
+    }
+  }, [clerkId, isLoaded]);
 
   return { user, loading };
 };
