@@ -27,20 +27,20 @@ const BlogDetailPage = () => {
   const navigate = useNavigate();
   const [sortMethod, setSortMethod] = useState("recent");
 
-  const { blogPost, loading: postLoading } = useFetchBlogPostbyId(id, sortMethod);
-  const { addComment } = useAddCommentToBlogPost(id);
-  const { upvote } = useUpvoteBlogPost(id);
-  const { downvote } = useDownvoteBlogPost(id);
-  const { incrementView } = useIncrementBlogPostView(id);
-  const { favorite } = useFavoriteBlogPost(id);
-  const { unfavorite } = useUnfavoriteBlogPost(id);
-  const { upvoteComment } = useUpvoteComment(id);
-  const { downvoteComment } = useDownvoteComment(id);
+  const { blogPost = {}, loading: postLoading } = useFetchBlogPostbyId(id, sortMethod) || {};
+  const { addComment } = useAddCommentToBlogPost(id) || {};
+  const { upvote } = useUpvoteBlogPost(id) || {};
+  const { downvote } = useDownvoteBlogPost(id) || {};
+  const { incrementView } = useIncrementBlogPostView(id) || {};
+  const { favorite } = useFavoriteBlogPost(id) || {};
+  const { unfavorite } = useUnfavoriteBlogPost(id) || {};
+  const { upvoteComment } = useUpvoteComment(id) || {};
+  const { downvoteComment } = useDownvoteComment(id) || {};
   const [commentContent, setCommentContent] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const { userId, isLoaded: authLoaded } = useAuth();
-  const { user, loading: userLoading } = useFetchUserById(userId , authLoaded) ;
+  const { user, loading: userLoading } = useFetchUserById(userId , authLoaded) || {};
   const [comments, setComments] = useState([]);
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [downvoteCount, setDownvoteCount] = useState(0);
@@ -57,12 +57,12 @@ const BlogDetailPage = () => {
       if (!blogPost.visibility && blogPost.author.clerkId !== userId) {
         setTimeout(() => navigate("/dashboard"), 2000); // Redirect after 2 seconds
       }
-      setComments(blogPost.comments);
-      setViewCount(blogPost.views.length);
-      setUpvoteCount(blogPost.upvotes.length);
-      setDownvoteCount(blogPost.downvotes.length);
+      setComments(blogPost.comments || {});
+      setViewCount((blogPost.views || {}).length);
+      setUpvoteCount((blogPost.upvotes || {}).length);
+      setDownvoteCount((blogPost.downvotes || {}).length);
       if (!userLoading && user) {
-        setHasViewed(blogPost.views.includes(user._id));
+        setHasViewed((blogPost.views || []).includes(user._id));
         if (!hasViewed) {
           incrementView(user._id).then(() => {
             setHasViewed(true);
@@ -70,8 +70,8 @@ const BlogDetailPage = () => {
           });
         }
         setIsFavorite(user.favorites.some((favPost) => favPost._id === id));
-        setHasUpvoted(blogPost.upvotes.includes(user._id));
-        setHasDownvoted(blogPost.downvotes.includes(user._id));
+        setHasUpvoted((blogPost.upvotes || []).includes(user._id));
+        setHasDownvoted((blogPost.downvotes || []).includes(user._id));
       }
     }
   }, [userLoading, user, blogPost, postLoading]);
@@ -287,7 +287,7 @@ const BlogDetailPage = () => {
       if (match) {
         if (inCodeBlock) {
           result.push(
-            <SyntaxHighlighter language={language} style={darcula} key={`codeblock-${index}`}>
+            <SyntaxHighlighter language={language} style={darcula} key={`codeblock-${index}`} showLineNumbers>
               {currentCodeBlock.join("\n")}
             </SyntaxHighlighter>
           );
