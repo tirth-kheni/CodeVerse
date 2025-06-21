@@ -17,6 +17,7 @@ import useIncrementBlogPostView from "../hooks/useIncrementBlogPostView";
 import useFavoriteBlogPost from "../hooks/useFavoriteBlogPost";
 import useUnfavoriteBlogPost from "../hooks/useUnfavoriteBlogPost";
 import formatDate from "../utils/formatDate";
+import Spinner from "../components/spinner";
 
 const BlogDetailPage = () => {
   const { id } = useParams();
@@ -72,7 +73,7 @@ const BlogDetailPage = () => {
   }, [userLoading, user, blogPost, postLoading]);
 
   if (postLoading || userLoading) {
-    return <div>Loading...</div>;
+    return <Spinner />;
   }
 
   if (!blogPost.visibility && blogPost.author.clerkId !== userId) {
@@ -368,7 +369,7 @@ const BlogDetailPage = () => {
               {downvoteCount}
             </span>
             <span className="flex items-center mr-4">
-              <FiMessageCircle className="mr-2" /> {comments.length}
+              <FiMessageCircle className="mr-2" /> {comments.length + comments.reduce((sum,array) => sum + array.replies?.length , 0)}
             </span>
             <span className="flex items-center mr-4">
               <FaEye className="mr-2" /> {viewCount}
@@ -382,7 +383,7 @@ const BlogDetailPage = () => {
             </span>
           </div>
           <div className="mb-8">
-            <pre>{blogPost.content}</pre>
+            <pre className=" whitespace-pre-wrap">{blogPost.content}</pre>
           </div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold">Comments</h2>

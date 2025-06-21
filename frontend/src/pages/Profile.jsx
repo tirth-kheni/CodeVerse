@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import useFetchUserById from "../hooks/useFetchUserById";
 import formatDate from "../utils/formatDate";
+import Spinner from "../components/spinner";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const Profile = () => {
       <div className="w-full flex justify-center bg-background drop-shadow-2xl">
         <Header />
       </div>
-      {loading && <p>Loading...</p>}
+      {loading && <Spinner />}
       {!loading && !user && <p>User not found</p>}
       {isLoaded && user && (
         <div className="min-h-screen bg-background text-primary_text p-4 flex flex-col lg:flex-row items-start">
@@ -173,13 +174,12 @@ const Profile = () => {
                         <div className="flex items-center justify-between text-secondary_text">
                           <Link
                             to={`/dashboard/blog/${post._id}`}
-                            className=" w-24 sm:w-full sm:max-w-md md:w-full md:max-w-lg lg:max-w-xl"
                           >
-                            <div className="text-primary_text hover:underline text-sm sm:text-base hover:text-primary truncate ">
+                            <div className="text-primary_text hover:underline text-sm sm:text-base hover:text-primary line-clamp-1 ">
                               {post.title}
                             </div>
                           </Link>
-                          <span className="ml-2 text-xs flex gap-1 sm:text-sm">
+                          <span className="ml-2 text-xs flex gap-1 sm:text-sm min-w-28">
                             {formatDate(post.date)}
                             {post.visibility === true ? (
                               <FiUnlock
@@ -216,13 +216,12 @@ const Profile = () => {
                         <div className="flex items-center justify-between text-secondary_text  ">
                           <Link
                             to={`/dashboard/blog/${comment.postId?._id}`}
-                            className=" w-24 sm:w-full sm:max-w-md md:w-full md:max-w-lg lg:max-w-xl"
                           >
-                            <div className="text-primary_text hover:underline text-sm sm:text-base hover:text-primary truncate ">
+                            <div className="text-primary_text hover:underline text-sm sm:text-base hover:text-primary line-clamp-1 ">
                               {comment.content}
                             </div>
                           </Link>
-                          <span className="ml-2 text-xs flex gap-1 sm:text-sm">
+                          <span className="ml-2 text-xs flex gap-1 sm:text-sm min-w-28">
                             {formatDate(comment.date)}
                             {comment.postId?.visibility === true ? (
                               <FiUnlock
@@ -261,13 +260,12 @@ const Profile = () => {
                             <div className="flex items-center justify-between text-secondary_text">
                               <Link
                                 to={`/dashboard/blog/${post._id}`}
-                                className=" w-24 sm:w-full sm:max-w-md md:w-full md:max-w-lg lg:max-w-xl"
                               >
-                                <div className="text-primary_text hover:underline text-sm sm:text-base hover:text-primary truncate ">
+                                <div className="text-primary_text hover:underline text-sm sm:text-base hover:text-primary line-clamp-1 ">
                                   {post.title}
                                 </div>
                               </Link>
-                              <span className="ml-2 text-xs flex gap-1 sm:text-sm">
+                              <span className="ml-2 text-xs flex gap-1 sm:text-sm min-w-28">
                                 {formatDate(post.date)}
                                 {post.visibility === true ? (
                                   <FiUnlock

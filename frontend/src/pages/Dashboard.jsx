@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiBookmark,
   FiMessageCircle,
@@ -19,15 +19,22 @@ import { Link } from "react-router-dom";
 import useFetchBlogPosts from "../hooks/useFetchBlogPosts";
 import { useAuth } from "@clerk/clerk-react";
 import formatDate from "../utils/formatDate";
+import Spinner from "../components/spinner";
 
 const DashboardPage = () => {
   const [sortMethod, setSortMethod] = useState("recent");
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState("");
   const [platformFilter, setPlatformFilter] = useState("");
+  const [problemLink, setProblemLink] = useState("");
   const [page, setPage] = useState(1);
-  const { blogPosts: blogs, loading, totalPages } = useFetchBlogPosts(sortMethod, page, 5, tags, platformFilter);
+  const { blogPosts: blogs, loading, totalPages } = useFetchBlogPosts(sortMethod, page, 5, tags, platformFilter, problemLink);
   const { userId } = useAuth();
+  const [loadingFirstTime, setLoadingFirstTime] = useState(true);
+
+  useEffect(() => {
+    setLoadingFirstTime(false);
+  }, []);
 
   const handleAddTag = (e) => {
     if (e.key === "Enter" || e.type === "click") {
@@ -55,8 +62,13 @@ const DashboardPage = () => {
     setPlatformFilter(e.target.value);
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
+  const handleProblemLinkChange = (e) => {
+    setPage(1);
+    setProblemLink(e.target.value);
+  };
+
+  if (loadingFirstTime) {
+    return <Spinner />;
   }
 
   return (
@@ -64,39 +76,8 @@ const DashboardPage = () => {
       <div className="w-full flex justify-center bg-background drop-shadow-2xl">
         <Header />
       </div>
-      <div className="min-h-screen bg-background text-primary_text p-4 flex flex-col lg:flex-row items-start">
-        {/* Sidebar */}
-        <div className="w-full lg:w-1/6 bg-background p-4 rounded-lg shadow-lg mb-4 lg:mb-0">
-          <nav className="flex flex-col space-y-4">
-            <Link
-              to="/"
-              className="flex items-center text-secondary_text hover:text-primary"
-            >
-              <FaHome className="mr-2" /> Home
-            </Link>
-            <Link
-              to="/dashboard"
-              className="flex items-center text-secondary_text hover:text-primary"
-            >
-              <FaQuestionCircle className="mr-2" /> Questions
-            </Link>
-            <Link
-              to="#"
-              className="flex items-center text-secondary_text hover:text-primary"
-            >
-              <FaTags className="mr-2" /> Tags
-            </Link>
-            <Link
-              to="/community"
-              className="flex items-center text-secondary_text hover:text-primary"
-            >
-              <FaUsers className="mr-2" /> Community
-            </Link>
-          </nav>
-        </div>
-
-        {/* Main Content */}
-        <div className="w-full lg:w-5/6 bg-background p-4 rounded-lg shadow-lg">
+      <div className="min-h-screen bg-background text-primary_text p-4 flex flex-col items-start">
+        <div className="w-full bg-background p-4 rounded-lg shadow-lg">
           <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
             <h1 className="text-3xl font-bold mb-4 lg:mb-0">All Questions</h1>
             <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
@@ -118,7 +99,7 @@ const DashboardPage = () => {
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyDown={handleAddTag}
                   className="input input-bordered w-full lg:w-auto p-2"
-                  placeholder="Add tag"
+                  placeholder="Search tags"
                 />
                 <button
                   type="button"
@@ -128,12 +109,19 @@ const DashboardPage = () => {
                   <FaPaperPlane />
                 </button>
               </div>
-              <input
+              {/* <input
                 type="text"
                 className="input input-bordered w-full lg:w-auto"
                 placeholder="All Platforms"
                 value={platformFilter}
                 onChange={handlePlatformChange}
+              /> */}
+              <input
+                type="text"
+                className="input input-bordered w-full lg:w-auto"
+                placeholder="Problem Link/Platform Name"
+                value={problemLink}
+                onChange={handleProblemLinkChange}
               />
               {userId && (
                 <Link to="add-post">
@@ -148,7 +136,7 @@ const DashboardPage = () => {
             {tags.map((tag, index) => (
               <span
                 key={index}
-                className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 mb-2 text-sm"
+                className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 mb-2 text-base"
               >
                 {tag}
                 <button
@@ -160,6 +148,7 @@ const DashboardPage = () => {
               </span>
             ))}
           </div>
+          {loading && <div className="self-center w-10 h-10 border-4 border-primary border-dashed rounded-full animate-spin m-2"></div>}
           <section>
             <div className="space-y-8">
               {blogs.map((blog) => (
@@ -168,7 +157,7 @@ const DashboardPage = () => {
                   className="bg-background p-4 rounded-lg shadow drop-shadow-xl border border-secondary/80"
                 >
                   <Link to={`blog/${blog._id}`}>
-                    <h3 className="font-bold text-lg text-primary_text hover:underline">
+                    <h3 className="font-bold text-lg text-primary_text hover:underline line-clamp-1">
                       {blog.title}
                     </h3>
                   </Link>
@@ -228,7 +217,7 @@ const DashboardPage = () => {
             >
               Previous
             </button>
-            <span className="px-4 py-2 mx-1">{`Page ${totalPages===0?'0':page} of ${totalPages}`}</span>
+            <span className="px-4 py-2 mx-1">{`Page ${totalPages === 0 ? '0' : page} of ${totalPages}`}</span>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages || totalPages === 0}
