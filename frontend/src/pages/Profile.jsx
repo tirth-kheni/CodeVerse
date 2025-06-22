@@ -3,14 +3,14 @@ import { FiBookmark, FiMessageCircle, FiLock, FiUnlock } from "react-icons/fi";
 import { FaExternalLinkAlt, FaGithub, FaLinkedin } from "react-icons/fa";
 import Header from "../components/Header";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import useFetchUserById from "../hooks/useFetchUserById";
 import formatDate from "../utils/formatDate";
 import Spinner from "../components/spinner";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user:clerkUser } = useUser();
+  // const { user:clerkUser } = useUser();
   const { userId, isLoaded } = useAuth();
   const { userid } = useParams();
 
@@ -35,6 +35,7 @@ const Profile = () => {
       ) || [];
   }
 
+  console.log(user)
   return (
     <>
       <div className="w-full flex justify-center bg-background drop-shadow-2xl">
@@ -48,8 +49,8 @@ const Profile = () => {
           <div className="w-full lg:w-1/4 bg-background p-4 rounded-lg shadow-lg">
             <div className="flex flex-col items-center">
               <img
-                className="rounded-full w-24 h-24 mb-4"
-                src={clerkUser.imageUrl}
+                className="rounded-full w-28 h-28 object-cover mb-4"
+                src={user.avatar}
                 alt={user.name}
               />
               <h2 className="text-xl font-semibold text-primary_text">

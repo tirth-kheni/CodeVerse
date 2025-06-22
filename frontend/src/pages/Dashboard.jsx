@@ -5,6 +5,10 @@ import {
   FiArrowDown,
 } from "react-icons/fi";
 import {
+  FaHome,
+  FaQuestionCircle,
+  FaTags,
+  FaUsers,
   FaPlus,
   FaEye,
   FaPaperPlane,
@@ -23,18 +27,7 @@ const DashboardPage = () => {
   const [platformFilter, setPlatformFilter] = useState("");
   const [problemLink, setProblemLink] = useState("");
   const [page, setPage] = useState(1);
-  const {
-    blogPosts: blogs = [],
-    loading,
-    totalPages = 0,
-  } = useFetchBlogPosts(
-    sortMethod,
-    page,
-    5,
-    tags,
-    platformFilter,
-    problemLink
-  );
+  const { blogPosts: blogs, loading, totalPages } = useFetchBlogPosts(sortMethod, page, 5, tags, platformFilter, problemLink);
   const { userId } = useAuth();
   const [loadingFirstTime, setLoadingFirstTime] = useState(true);
 
@@ -46,8 +39,12 @@ const DashboardPage = () => {
     if (e.key === "Enter" || e.type === "click") {
       setPage(1);
       e.preventDefault();
-      const tagLower = newTag.trim().toLowerCase();
-      if (newTag.trim() && !tags.map((t) => t.toLowerCase()).includes(tagLower)) {
+      if (
+        newTag.trim() &&
+        !tags
+          .map((tag) => tag.toLowerCase())
+          .includes(newTag.trim().toLowerCase())
+      ) {
         setTags([...tags, newTag.trim()]);
         setNewTag("");
       }
@@ -143,12 +140,10 @@ const DashboardPage = () => {
               </span>
             ))}
           </div>
-          {loading && (
-            <div className="self-center w-10 h-10 border-4 border-primary border-dashed rounded-full animate-spin m-2"></div>
-          )}
+          {loading && <div className="self-center w-10 h-10 border-4 border-primary border-dashed rounded-full animate-spin m-2"></div>}
           <section>
             <div className="space-y-8">
-              {(blogs || []).map((blog) => (
+              {blogs.map((blog) => (
                 <div
                   key={blog._id}
                   className="bg-background p-4 rounded-lg shadow drop-shadow-xl border border-secondary/80"
@@ -165,9 +160,9 @@ const DashboardPage = () => {
                     Problem Link: {blog.problemLink}
                   </a>
                   <div className="mb-2 whitespace-nowrap overflow-scroll">
-                    {(blog.tags || []).map((tag, idx) => (
+                    {blog.tags.map((tag, index) => (
                       <span
-                        key={idx}
+                        key={index}
                         className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 text-sm"
                       >
                         #{tag}
@@ -187,16 +182,17 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex items-center">
                       <span className="flex items-center mr-4">
-                        <FiArrowUp className="mr-2" /> {blog.upvotes?.length ?? 0}
+                        <FiArrowUp className="mr-2" /> {blog.upvotes.length}
                       </span>
                       <span className="flex items-center mr-4">
-                        <FiArrowDown className="mr-2" /> {blog.downvotes?.length ?? 0}
+                        <FiArrowDown className="mr-2" /> {blog.downvotes.length}
                       </span>
                       <span className="flex items-center mr-4">
-                        <FiMessageCircle className="mr-2" /> {blog.commentsCount ?? 0}
+                        <FiMessageCircle className="mr-2" />
+                        {blog.commentsCount}
                       </span>
                       <span className="flex items-center mr-4">
-                        <FaEye className="mr-2" /> {blog.views?.length ?? 0}
+                        <FaEye className="mr-2" /> {blog.views.length}
                       </span>
                     </div>
                   </div>
