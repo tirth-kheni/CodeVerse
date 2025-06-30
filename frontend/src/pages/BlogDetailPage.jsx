@@ -30,7 +30,10 @@ const BlogDetailPage = () => {
   const navigate = useNavigate();
   const [sortMethod, setSortMethod] = useState("recent");
 
-  const { blogPost, loading: postLoading } = useFetchBlogPostbyId(id, sortMethod);
+  const { blogPost, loading: postLoading } = useFetchBlogPostbyId(
+    id,
+    sortMethod
+  );
   const { addComment } = useAddCommentToBlogPost(id);
   const { upvote } = useUpvoteBlogPost(id);
   const { downvote } = useDownvoteBlogPost(id);
@@ -43,24 +46,29 @@ const BlogDetailPage = () => {
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const { userId, isLoaded: authLoaded } = useAuth();
-  const { user, loading: userLoading } = useFetchUserById(userId , authLoaded) ;
+  const { user, loading: userLoading } = useFetchUserById(userId, authLoaded);
   const [comments, setComments] = useState([]);
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [downvoteCount, setDownvoteCount] = useState(0);
   const [viewCount, setViewCount] = useState(0);
-  const [hasViewed, setHasViewed] = useState(true);
+  let hasViewed = false;
+  // const [hasViewed, setHasViewed] = useState(true);
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [hasDownvoted, setHasDownvoted] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showReplies, setShowReplies] = useState({});
   const replyTextareaRef = useRef(null);
-  const { explainComment, loading: explainLoading, explanation, error } = useExplainComment(); 
+  const {
+    explainComment,
+    loading: explainLoading,
+    explanation,
+    error,
+  } = useExplainComment();
   const [explanations, setExplanations] = useState({});
   const [loadingStates, setLoadingStates] = useState({});
 
   const [postExplanation, setPostExplanation] = useState(null);
   const [postExplanationLoading, setPostExplanationLoading] = useState(false);
-
 
   useEffect(() => {
     if (!postLoading && blogPost) {
@@ -72,12 +80,18 @@ const BlogDetailPage = () => {
       setUpvoteCount(blogPost.upvotes.length);
       setDownvoteCount(blogPost.downvotes.length);
       if (!userLoading && user) {
-        setHasViewed(blogPost.views.includes(user._id));
+        // setHasViewed(blogPost.views.includes(user._id));
         if (!hasViewed) {
-          incrementView(user._id).then(() => {
-            setHasViewed(true);
-            setViewCount(viewCount + 1);
-          });
+          hasViewed = blogPost.views.includes(user._id);
+          if (!hasViewed) {
+            blogPost.views.push(user._id);
+            incrementView(user._id).then(() => {
+              // setHasViewed(true);
+              hasViewed = true;
+              setViewCount(viewCount + 1);
+            });
+            // console.log("leaving now");
+          }
         }
         setIsFavorite(user.favorites.some((favPost) => favPost._id === id));
         setHasUpvoted(blogPost.upvotes.includes(user._id));
@@ -85,7 +99,7 @@ const BlogDetailPage = () => {
       }
     }
   }, [userLoading, user, blogPost, postLoading]);
-// console.log(authLoaded , userId , userLoading , user, postLoading , blogPost)
+  // console.log(authLoaded , userId , userLoading , user, postLoading , blogPost)
   if (postLoading || userLoading) {
     return <Spinner />;
   }
@@ -111,15 +125,20 @@ const BlogDetailPage = () => {
       }
       setCommentContent("");
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
-  const handleReplySubmit = async (e, parentId , replyingToId) => {
+  const handleReplySubmit = async (e, parentId, replyingToId) => {
     e.preventDefault();
     if (user && user._id && parentId) {
-      const newReply = await addComment(replyContent, user._id, parentId , replyingToId);
+      const newReply = await addComment(
+        replyContent,
+        user._id,
+        parentId,
+        replyingToId
+      );
       if (newReply) {
         setComments(
           comments.map((comment) => {
@@ -133,8 +152,8 @@ const BlogDetailPage = () => {
         setReplyContent("");
       }
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
@@ -148,8 +167,8 @@ const BlogDetailPage = () => {
         setHasDownvoted(false);
       }
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
@@ -163,8 +182,8 @@ const BlogDetailPage = () => {
         setHasUpvoted(false);
       }
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
@@ -173,8 +192,8 @@ const BlogDetailPage = () => {
       await favorite(user._id);
       setIsFavorite(true);
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
@@ -183,20 +202,28 @@ const BlogDetailPage = () => {
       await unfavorite(user._id);
       setIsFavorite(false);
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
+  const sanitizeInput = (input) => {
+    const text = document.createElement("textarea");
+    text.innerHTML = input;
+    return text.value;
+  };
+
   const handleReplyClick = (comment) => {
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
     setReplyingTo(comment._id);
-    setReplyContent(`@${comment.author.name} `);
+    setReplyContent(`@${sanitizeInput(comment.author.name)} `);
     setTimeout(() => {
-      replyTextareaRef.current.selectionStart = replyTextareaRef.current.value.length;
-      replyTextareaRef.current.selectionEnd = replyTextareaRef.current.value.length;
+      replyTextareaRef.current.selectionStart =
+        replyTextareaRef.current.value.length;
+      replyTextareaRef.current.selectionEnd =
+        replyTextareaRef.current.value.length;
       replyTextareaRef.current.focus();
     }, 0);
   };
@@ -237,8 +264,8 @@ const BlogDetailPage = () => {
         })
       );
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
@@ -272,8 +299,8 @@ const BlogDetailPage = () => {
         })
       );
     }
-    if(!user){
-      toast.error('Please Sign In to Perform Action')
+    if (!user) {
+      toast.error("Please Sign In to Perform Action");
     }
   };
 
@@ -284,7 +311,6 @@ const BlogDetailPage = () => {
     }));
   };
 
-  
   const renderContentWithHighlighting = (content) => {
     const lines = content.split("\n");
     const codeBlockPattern = /^```(\w+)?\s*$/;
@@ -292,13 +318,18 @@ const BlogDetailPage = () => {
     let language = "";
     let currentCodeBlock = [];
     const result = [];
-  
+
     lines.forEach((line, index) => {
       const match = line.match(codeBlockPattern);
       if (match) {
         if (inCodeBlock) {
           result.push(
-            <SyntaxHighlighter language={language} style={darcula} key={`codeblock-${index}`} showLineNumbers>
+            <SyntaxHighlighter
+              language={language}
+              style={darcula}
+              key={`codeblock-${index}`}
+              showLineNumbers
+            >
               {currentCodeBlock.join("\n")}
             </SyntaxHighlighter>
           );
@@ -314,48 +345,60 @@ const BlogDetailPage = () => {
         // Inline formatting
         let formattedLine = line;
         // Bold
-        formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        formattedLine = formattedLine.replace(
+          /\*\*(.*?)\*\*/g,
+          "<strong>$1</strong>"
+        );
         // Italics
         formattedLine = formattedLine.replace(/\*(.*?)\*/g, "<em>$1</em>");
         // Inline code
         formattedLine = formattedLine.replace(/`([^`]+)`/g, "<code>$1</code>");
-  
+
         result.push(
-          <p key={`line-${index}`} dangerouslySetInnerHTML={{ __html: formattedLine }} />
+          <p
+            key={`line-${index}`}
+            className=" max-w-full break-words"
+            dangerouslySetInnerHTML={{ __html: formattedLine }}
+          />
         );
       }
     });
-  
+
     if (currentCodeBlock.length > 0) {
       result.push(
-        <SyntaxHighlighter language={language} style={darcula} key={`codeblock-${lines.length}`}>
+        <SyntaxHighlighter
+          language={language}
+          style={darcula}
+          key={`codeblock-${lines.length}`}
+        >
           {currentCodeBlock.join("\n")}
         </SyntaxHighlighter>
       );
     }
-  
+
     return result;
   };
-  
+
   const handleExplainPost = async () => {
     setPostExplanationLoading(true);
 
-    const prompt = `
-      Blog Post Title: ${blogPost.title}
+  const prompt = `
+  Blog Post Title: ${blogPost.title}
 
-      Blog Post Content:
-      ${blogPost.content}
+  Blog Post Content:
+  ${blogPost.content}
 
-      Please provide a detailed explanation of the blog post content. Focus on the key points and coding-related aspects. Follow these formatting rules:
+  Please provide a detailed explanation only of the blog post content. Focus on coding-related aspects, such as explaining code snippets or identifying potential mistakes. If the post offers insights, solutions, or technical analysis related to the code or the topic discussed, elaborate on it. Provide code snippets where relevant, using the following formatting rules:
+  - Use \`\`\`language_name\ncode_here\n\`\`\` for code blocks.
+  - Use \`inline_code\` for inline code.
+  - Use **bold** for bold text.
+  - Use *italics* for italics.
 
-      - Use \`\`\`language_name\ncode_here\n\`\`\` for code blocks.
-      - Use \`inline_code\` for inline code.
-      - Use **bold** for bold text.
-      - Use *italics* for italics.
+  Common language_name for code blocks are: javascript, python, java, csharp, php, ruby, go, c, cpp, html, css, sql, bash, json.
 
-      Common language_name for code blocks are: javascript, python, java, csharp, php, ruby, go, c, cpp, html, css, sql, bash, json.
-      Ensure to cover the overall message, technical details, and any specific coding examples.
-    `;
+  If the post does not contain technical details, provide a very short response and don't explain it.
+  `;
+
 
     try {
       const newExplanation = await explainComment(prompt); // Replace with your actual API call
@@ -365,13 +408,17 @@ const BlogDetailPage = () => {
     } finally {
       setPostExplanationLoading(false);
     }
-};
+  };
 
+  const handleExplainComment = async (
+    commentId,
+    commentText,
+    blogPostTitle,
+    blogPostContent
+  ) => {
+    setLoadingStates((prev) => ({ ...prev, [commentId]: true }));
 
-const handleExplainComment = async (commentId, commentText, blogPostTitle, blogPostContent) => {
-  setLoadingStates((prev) => ({ ...prev, [commentId]: true }));
-
-  const prompt = `
+    const prompt = `
     Blog Post Title: ${blogPostTitle}
 
     Blog Post Content:
@@ -380,8 +427,8 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
     Comment:
     ${commentText}
 
-    Please provide a detailed explanation based on the context of the blog post and the comment. Focus on coding-related aspects, such as explaining code snippets or identifying potential mistakes. If the comment offers insights, solutions, or technical analysis related to the code or the topic discussed, elaborate on it. Provide code snippets where relevant, using the following formatting rules:
-
+    Please provide a detailed explanation only of the comment using context from blogpost. Focus on coding-related aspects, such as explaining code snippets or identifying potential mistakes. If the comment offers insights, solutions, or technical analysis related to the code or the topic discussed, elaborate on it. Provide code snippets where relevant, using the following formatting rules:
+    If comment contains insight aboout different approach give feedback on that or if approach is feasible give code
     - Use \`\`\`language_name\ncode_here\n\`\`\` for code blocks.
     - Use \`inline_code\` for inline code.
     - Use **bold** for bold text.
@@ -389,19 +436,19 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
 
     Common language_name for code blocks are: javascript, python, java, csharp, php, ruby, go, c, cpp, html, css, sql, bash, json.
 
-    If the comment does not contain technical details, provide a brief response that addresses the main points of the comment.
-  `;
+    If the comment does not contain technical details, provide a very short response and dont explain it.
+    `;
 
-  try {
-    const newExplanation = await explainComment(prompt); // Replace with your actual API call
-    // console.log(newExplanation);
-    setExplanations((prev) => ({ ...prev, [commentId]: newExplanation }));
-  } catch (error) {
-    toast.error(error);
-  } finally {
-    setLoadingStates((prev) => ({ ...prev, [commentId]: false }));
-  }
-};
+    try {
+      const newExplanation = await explainComment(prompt); // Replace with your actual API call
+      // console.log(newExplanation);
+      setExplanations((prev) => ({ ...prev, [commentId]: newExplanation }));
+    } catch (error) {
+      toast.error(error);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [commentId]: false }));
+    }
+  };
 
   // console.log(explanation , explanations , loadingStates)
 
@@ -409,48 +456,100 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
     return comments
       .filter((comment) => comment.parentId === parentId)
       .map((comment) => (
-        <div key={comment._id} className="relative p-4 mb-4 bg-primary/10 drop-shadow-xl rounded-lg">
+        <div
+          key={comment._id}
+          className="relative p-4 mb-4 bg-primary/10 drop-shadow-xl rounded-lg"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <Link to={`/${comment.author.clerkId}`} className="text-primary hover:underline">
-                {comment.author.clerkId === userId ? "You" : comment.author.name}
+              <Link
+                to={`/${comment.author.clerkId}`}
+                className="text-primary hover:underline"
+              >
+                <p
+                  className="text-primary hover:underline"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      comment.author.clerkId === userId
+                        ? "You"
+                        : comment.author.name,
+                  }}
+                />
               </Link>
-              <p className="text-secondary_text text-sm">{formatDate(comment.date)}</p>
+              <p className="text-secondary_text text-sm">
+                {formatDate(comment.date)}
+              </p>
             </div>
             <button
               disabled={explainLoading}
-              onClick={() => handleExplainComment(comment._id, comment.content, blogPost.title, blogPost.content)}
+              onClick={() =>
+                handleExplainComment(
+                  comment._id,
+                  comment.content,
+                  blogPost.title,
+                  blogPost.content
+                )
+              }
               className="flex items-center text-primary_text btn bg-background underline hover:bg-primary ml-2"
             >
               <AiOutlineRobot className="mr-1" /> <p>Explain</p>
             </button>
           </div>
-          <div className="text-primary_text mt-2">{renderContentWithHighlighting(comment.content)}</div>
+          <div className="text-primary_text mt-2">
+            {renderContentWithHighlighting(comment.content)}
+          </div>
           <div className="flex items-center mt-2 text-secondary_text">
             <span className="flex items-center mr-4">
               <MdThumbUp
-                className={`mr-2 cursor-pointer ${comment.upvotes.includes(user?._id) ? "text-primary" : ""}`}
-                onClick={() => handleCommentUpvote(comment._id, comment.parentId, comment.upvotes.includes(user?._id))}
+                className={`mr-2 cursor-pointer ${
+                  comment.upvotes.includes(user?._id) ? "text-primary" : ""
+                }`}
+                onClick={() =>
+                  handleCommentUpvote(
+                    comment._id,
+                    comment.parentId,
+                    comment.upvotes.includes(user?._id)
+                  )
+                }
               />
               {comment.upvotes.length}
             </span>
             <span className="flex items-center mr-4">
               <MdThumbDown
-                className={`mr-2 cursor-pointer ${comment.downvotes.includes(user?._id) ? "text-primary" : ""}`}
-                onClick={() => handleCommentDownvote(comment._id, comment.parentId, comment.downvotes.includes(user?._id))}
+                className={`mr-2 cursor-pointer ${
+                  comment.downvotes.includes(user?._id) ? "text-primary" : ""
+                }`}
+                onClick={() =>
+                  handleCommentDownvote(
+                    comment._id,
+                    comment.parentId,
+                    comment.downvotes.includes(user?._id)
+                  )
+                }
               />
               {comment.downvotes.length}
             </span>
-            <button onClick={() => handleReplyClick(comment)} className="text-primary underline">
+            <button
+              onClick={() => handleReplyClick(comment)}
+              className="text-primary underline"
+            >
               Reply
             </button>
           </div>
-          {loadingStates[comment._id] && <p className=" text-primary_text  text-center bg-background p-4 mt-2 rounded-lg drop-shadow-xl outline outline-1" >Loading explanation...</p>}
+          {loadingStates[comment._id] && (
+            <div className="flex items-center justify-center text-primary_text bg-background p-4 mt-2 rounded-lg shadow-xl outline outline-1">
+              <div className="w-5 h-5 border-4 border-primary border-dashed rounded-full animate-spin mr-2"></div>
+              <p>Loading...</p>
+            </div>
+          )}
           {explanations[comment._id] && (
             <div className="bg-background p-4 mt-2 rounded-lg drop-shadow-xl outline outline-1">
-              <strong>Explanation:</strong> {renderContentWithHighlighting(explanations[comment._id])}
+              <strong>Explanation:</strong>{" "}
+              {renderContentWithHighlighting(explanations[comment._id])}
               <button
-                onClick={() => setExplanations({ ...explanations, [comment._id]: null })}
+                onClick={() =>
+                  setExplanations({ ...explanations, [comment._id]: null })
+                }
                 className="flex items-center text-primary underline ml-2 mt-2"
               >
                 Close Explanation
@@ -459,18 +558,30 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
           )}
           <div className="ml-8">
             {!showReplies[comment._id] && comment.replies.length > 0 && (
-              <button onClick={() => toggleShowReplies(comment._id)} className="text-primary underline mt-2">
+              <button
+                onClick={() => toggleShowReplies(comment._id)}
+                className="text-primary underline mt-2"
+              >
                 Show all replies ({comment.replies.length})
               </button>
             )}
             {showReplies[comment._id] && comment.replies.length > 0 && (
-              <button onClick={() => toggleShowReplies(comment._id)} className="text-primary underline mt-2">
+              <button
+                onClick={() => toggleShowReplies(comment._id)}
+                className="text-primary underline mt-2"
+              >
                 Hide replies
               </button>
             )}
             {replyingTo === comment._id && user && (
               <form
-                onSubmit={(e) => handleReplySubmit(e, comment.parentId === id ? comment._id : comment.parentId , comment.parentId === id ? null : comment._id )}
+                onSubmit={(e) =>
+                  handleReplySubmit(
+                    e,
+                    comment.parentId === id ? comment._id : comment.parentId,
+                    comment.parentId === id ? null : comment._id
+                  )
+                }
                 className="mt-4"
               >
                 <textarea
@@ -483,19 +594,20 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
                   required
                   onInput={adjustTextareaHeight}
                 />
-                <button type="submit" className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg">
+                <button
+                  type="submit"
+                  className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg"
+                >
                   Add Reply
                 </button>
               </form>
             )}
-            {showReplies[comment._id] && renderComments(comment.replies, comment._id)}
+            {showReplies[comment._id] &&
+              renderComments(comment.replies, comment._id)}
           </div>
         </div>
       ));
   };
-  
-
-
 
   return (
     <>
@@ -505,7 +617,10 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
       <div className="min-h-screen bg-background text-primary_text p-4 flex flex-col items-center">
         <div className="w-full lg:w-2/3 bg-background p-6 rounded-lg shadow-lg">
           <div className="mt-4 self-start flex flex-wrap items-center justify-between">
-            <Link to="/dashboard" className="text-primary underline flex items-center">
+            <Link
+              to="/dashboard"
+              className="text-primary underline flex items-center"
+            >
               <IoArrowBack className="text-primary " />
               Back to Dashboard
             </Link>
@@ -517,25 +632,40 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
               </Link>
             )}
           </div>
-          <h1 className="text-3xl font-bold mb-4">{blogPost.title}</h1>
-          <div className="flex items-center text-secondary_text mb-4">
+          <h1
+            className="text-xl lg:3xl font-bold mb-4 max-w-full break-words"
+            dangerouslySetInnerHTML={{ __html: blogPost.title }}
+          />
+          <div className="flex items-center text-secondary_text mb-4 max-w-full overflow-scroll">
             <pre>by </pre>
             <Link to={`/${blogPost.author.clerkId}`}>
-              <p className="text-secondary_text text-sm hover:underline">
-                {blogPost.author.clerkId === userId ? "You" : blogPost.author.name}
-              </p>
+              <p
+                className="text-secondary_text text-sm hover:underline max-w-1/2 overflow-scroll"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    blogPost.author.clerkId === userId
+                      ? "You"
+                      : blogPost.author.name,
+                }}
+              />
             </Link>
             <p className="text-sm ml-4">{formatDate(blogPost.date)}</p>
           </div>
           <p className="text-primary mb-4">
             Problem Link:{" "}
-            <a href={blogPost.problemLink} className="text-primary underline truncate block">
+            <a
+              href={blogPost.problemLink}
+              className="text-primary underline truncate block"
+            >
               {blogPost.problemLink}
             </a>
           </p>
-          <div className="mb-4">
+          <div className="mb-4 max-w-full overflow-scroll">
             {blogPost.tags.map((tag, index) => (
-              <span key={index} className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 text-sm">
+              <span
+                key={index}
+                className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 text-sm"
+              >
                 #{tag}
               </span>
             ))}
@@ -543,33 +673,41 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
           <div className="flex items-center text-secondary_text mb-4">
             <span className="flex items-center mr-4">
               <MdThumbUp
-                className={`mr-2 cursor-pointer ${hasUpvoted ? "text-primary" : ""}`}
+                className={`mr-2 cursor-pointer ${
+                  hasUpvoted ? "text-primary" : ""
+                }`}
                 onClick={handleUpvote}
               />
               {upvoteCount}
             </span>
             <span className="flex items-center mr-4">
               <MdThumbDown
-                className={`mr-2 cursor-pointer ${hasDownvoted ? "text-primary" : ""}`}
+                className={`mr-2 cursor-pointer ${
+                  hasDownvoted ? "text-primary" : ""
+                }`}
                 onClick={handleDownvote}
               />
               {downvoteCount}
             </span>
             <span className="flex items-center mr-4">
-              <FiMessageCircle className="mr-2" /> {comments.length + comments.reduce((sum, array) => sum + array.replies?.length, 0)}
+              <FiMessageCircle className="mr-2" />{" "}
+              {comments.length +
+                comments.reduce((sum, array) => sum + array.replies?.length, 0)}
             </span>
             <span className="flex items-center mr-4">
               <FaEye className="mr-2" /> {viewCount}
             </span>
             <span className="flex items-center mr-4">
               <FiBookmark
-                className={`mr-2 cursor-pointer ${isFavorite ? "text-primary" : ""}`}
+                className={`mr-2 cursor-pointer ${
+                  isFavorite ? "text-primary" : ""
+                }`}
                 onClick={isFavorite ? handleUnfavorite : handleFavorite}
               />
               {isFavorite ? "Unfavorite" : "Favorite"}
             </span>
           </div>
-          <div className="mb-8">
+          <div className="mb-8 ">
             {renderContentWithHighlighting(blogPost.content)}
             <button
               disabled={postExplanationLoading}
@@ -578,10 +716,16 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
             >
               <AiOutlineRobot className="mr-1" /> <p>Explain Post</p>
             </button>
-            {postExplanationLoading && <p className=" text-primary_text  text-center bg-background p-4 mt-2 rounded-lg drop-shadow-xl outline outline-1">Loading explanation...</p>}
+            {postExplanationLoading && (
+              <div className="flex items-center justify-center text-primary_text bg-background p-4 mt-2 rounded-lg shadow-xl outline outline-1">
+                <div className="w-5 h-5 border-4 border-primary border-dashed rounded-full animate-spin mr-2"></div>
+                <p>Loading...</p>
+              </div>
+            )}
             {postExplanation && (
               <div className="bg-background p-4 mt-2 rounded-lg drop-shadow-xl outline outline-1">
-                <strong>Explanation:</strong> {renderContentWithHighlighting(postExplanation)}
+                <strong>Explanation:</strong>{" "}
+                {renderContentWithHighlighting(postExplanation)}
                 <button
                   onClick={() => setPostExplanation(null)}
                   className="flex items-center text-primary underline ml-2 mt-2"
@@ -616,7 +760,10 @@ const handleExplainComment = async (commentId, commentText, blogPostTitle, blogP
                 required
                 onInput={adjustTextareaHeight}
               />
-              <button type="submit" className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg">
+              <button
+                type="submit"
+                className="mt-2 bg-primary text-primary_text hover:bg-border hover:text-primary px-4 py-2 rounded-lg"
+              >
                 Add Comment
               </button>
             </form>
