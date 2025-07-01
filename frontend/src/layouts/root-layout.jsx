@@ -7,7 +7,7 @@
 //       <header className="header">
 //         <div>
 //           <div>
-//             <p>ZCoder</p>
+//             <p>CodeVerse</p>
 //           </div>
 //           <div>
 //             <SignedOut>

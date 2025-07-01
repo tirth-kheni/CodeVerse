@@ -1,6 +1,6 @@
 {
   "company": {
-    "name": "ZCoder",
+    "name": "CodeVerse",
     "logo": "/assets/images/logo.png"
   },
 
@@ -9,9 +9,9 @@
     "href": "#"
   },
   "mainHero": {
-    "title": "Welcome to ZCoder",
+    "title": "Welcome to CodeVerse",
     "subtitle": "Empower Your Coding Journey",
-    "description": "ZCoder is your ultimate platform for creating personalized coding profiles, bookmarking coding problems, and engaging in collaborative learning through solution comments. Join us to enhance your coding skills in a community-driven environment.",
+    "description": "CodeVerse is your ultimate platform for creating personalized coding profiles, bookmarking coding problems, and engaging in collaborative learning through solution comments. Join us to enhance your coding skills in a community-driven environment.",
     "img": "/assets/images/hero_image.png",
     "primaryAction": {
       "text": "Dashboard",
@@ -23,7 +23,7 @@
     }
   },
   "product": {
-    "title": "ZCoder Features",
+    "title": "CodeVerse Features",
     "items": [
       {
         "title": "Personalised Profiles",

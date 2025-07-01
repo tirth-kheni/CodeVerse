@@ -50,12 +50,12 @@ const Header = () => {
       <div className="flex-1">
         <SignedOut>
           <Link to="/" className="btn btn-ghost text-2xl font-bold text-primary hover:text-secondary">
-            ZCoder
+            CodeVerse
           </Link>
         </SignedOut>
         <SignedIn>
           <Link to="/dashboard" className="btn btn-ghost text-2xl font-bold text-primary hover:text-secondary">
-            ZCoder
+            CodeVerse
           </Link>
         </SignedIn>
       </div>
