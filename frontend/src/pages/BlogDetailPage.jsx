@@ -75,14 +75,14 @@ const BlogDetailPage = () => {
       if (!blogPost.visibility && blogPost.author.clerkId !== userId) {
         setTimeout(() => navigate("/dashboard"), 2000); // Redirect after 2 seconds
       }
-      setComments(blogPost.comments);
-      setViewCount(blogPost.views.length);
-      setUpvoteCount(blogPost.upvotes.length);
-      setDownvoteCount(blogPost.downvotes.length);
+      setComments(blogPost.comments || []);
+      setViewCount((blogPost.views || []).length);
+      setUpvoteCount((blogPost.upvotes || []).length);
+      setDownvoteCount((blogPost.downvotes || []).length);
       if (!userLoading && user) {
         // setHasViewed(blogPost.views.includes(user._id));
         if (!hasViewed) {
-          hasViewed = blogPost.views.includes(user._id);
+          hasViewed = (blogPost.views || []).includes(user._id);
           if (!hasViewed) {
             blogPost.views.push(user._id);
             incrementView(user._id).then(() => {
@@ -93,9 +93,9 @@ const BlogDetailPage = () => {
             // console.log("leaving now");
           }
         }
-        setIsFavorite(user.favorites.some((favPost) => favPost._id === id));
-        setHasUpvoted(blogPost.upvotes.includes(user._id));
-        setHasDownvoted(blogPost.downvotes.includes(user._id));
+        setIsFavorite((user.favorites || []).some((favPost) => favPost._id === id));
+        setHasUpvoted((blogPost.upvotes || []).includes(user._id));
+        setHasDownvoted((blogPost.downvotes || []).includes(user._id));
       }
     }
   }, [userLoading, user, blogPost, postLoading]);

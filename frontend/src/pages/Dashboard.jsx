@@ -139,7 +139,7 @@ const DashboardPage = () => {
           )}
           <section>
             <div className="space-y-8">
-              {blogs.map((blog) => (
+              {(blogs || []).map((blog) => (
                 <div
                   key={blog._id}
                   className="bg-background p-4 rounded-lg shadow-xl border border-secondary/80"
@@ -157,7 +157,7 @@ const DashboardPage = () => {
                     Problem Link: {blog.problemLink}
                   </a>
                   <div className="mb-2 whitespace-nowrap overflow-scroll">
-                    {blog.tags.map((tag, index) => (
+                    {(blog.tags || []).map((tag, index) => (
                       <span
                         key={index}
                         className="bg-primary/10 text-primary_text/70 px-2 py-1 rounded-full mr-2 text-sm"
@@ -186,17 +186,17 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex items-center">
                       <span className="flex items-center mr-4">
-                        <FiArrowUp className="mr-2" /> {blog.upvotes.length}
+                        <FiArrowUp className="mr-2" /> {(blog.upvotes || []).length}
                       </span>
                       <span className="flex items-center mr-4">
-                        <FiArrowDown className="mr-2" /> {blog.downvotes.length}
+                        <FiArrowDown className="mr-2" /> {(blog.downvotes || []).length}
                       </span>
                       <span className="flex items-center mr-4">
                         <FiMessageCircle className="mr-2" />
                         {blog.commentsCount}
                       </span>
                       <span className="flex items-center mr-4">
-                        <FaEye className="mr-2" /> {blog.views.length}
+                        <FaEye className="mr-2" /> {(blog.views || []).length}
                       </span>
                     </div>
                   </div>
